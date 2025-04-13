@@ -1,0 +1,118 @@
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const userAgent = request.headers.get('User-Agent') || ''
+  
+  // List of bots to block
+  const bots = [
+    'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider', 'yandex', 'sogou', 'exabot', 
+    'facebot', 'facebookexternalhit', 'ia_archiver', 'adsbot-google', 'mediapartners-google'
+  ]
+
+  // Check if user-agent contains a bot name
+  const isBot = bots.some(bot => userAgent.toLowerCase().includes(bot))
+
+  if (isBot) {
+    // Redirect bots to Google or a blank page
+    return Response.redirect('https://www.google.com', 301)
+  }
+
+  // Otherwise, serve your prelander HTML
+  const html = await fetchPrelanderHTML()
+  return new Response(html, {
+    headers: {
+      'Content-Type': 'text/html',
+      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour, adjust as needed
+    }
+  })
+}
+
+// Function to fetch the prelander HTML (you can store the HTML as a static asset or fetch from your server)
+async function fetchPrelanderHTML() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Find Out If You Qualify for Free Spins</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background: #f9f9fb;
+          padding: 20px;
+          color: #333;
+        }
+        .quiz-container {
+          background: white;
+          padding: 25px;
+          border-radius: 12px;
+          max-width: 420px;
+          margin: auto;
+          box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+          text-align: center;
+          color: #7200ca;
+        }
+        .question {
+          margin-bottom: 20px;
+          text-align: center;
+        }
+        button {
+          padding: 12px 22px;
+          background: #7200ca;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          margin: 8px 5px;
+          font-size: 16px;
+        }
+        button:hover {
+          background: #5c00a1;
+        }
+        .disclaimer {
+          text-align: center;
+          font-size: 12px;
+          color: #777;
+          margin-top: 15px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="quiz-container">
+        <h2>Find Out If You Qualify for Free Spins</h2>
+        <div class="question" id="q1">
+          <p>1. What is your age group?</p>
+          <button onclick="next(2)">18-24</button>
+          <button onclick="next(2)">25-34</button>
+          <button onclick="next(2)">35+</button>
+        </div>
+        <div class="question" id="q2" style="display:none;">
+          <p>2. Do you play games on your mobile?</p>
+          <button onclick="next(3)">Yes</button>
+          <button onclick="next(3)">Sometimes</button>
+        </div>
+        <div class="question" id="q3" style="display:none;">
+          <p>3. Would you enjoy playing games where you can win real rewards?</p>
+          <button onclick="redirect()">Yes</button>
+        </div>
+        <div class="disclaimer">
+          *18+ only. Terms apply. Play responsibly.
+        </div>
+      </div>
+      <script>
+        function next(q) {
+          document.getElementById('q' + (q - 1)).style.display = 'none';
+          document.getElementById('q' + q).style.display = 'block';
+        }
+        function redirect() {
+          window.location.href = "https://go.playojo.com/redirect"; // Replace with your actual PlayOJO affiliate link
+        }
+      </script>
+    </body>
+    </html>
+  `
+}
